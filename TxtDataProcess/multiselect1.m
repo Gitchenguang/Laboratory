@@ -7,6 +7,8 @@ function [DispOutput output ]=multiselect1( Utunca, Umax,cyclenum )
 %               U0=-Umax+(n-1)*0.001 (n=1,2,3,4...,2*nmax)
 %               nmax = Umax/0.001 
 
+% 1月15日修改 增加忽略txt头部说明的功能
+
 % 读取txt数据文件
 [filename,filepath]=uigetfile('*.txt','MultiSelect','on');
 filenum=length(filename);
@@ -19,7 +21,8 @@ dataSet=zeros(dataSize,2*filenum);
 
 %载入数据文件 
 for j=1:1:filenum
-    dataSet( :,((j-1)*2+1):((j-1)*2+2))=load([filepath filename{1,j}]);
+    [ a , b ]= textread([filepath filename{1,j}],'%f%f', 'delimiter',',','headerlines',40);
+    dataSet( :,((j-1)*2+1):((j-1)*2+2))=[a,b];
 end
 
 % 数据文件的cycle数目
