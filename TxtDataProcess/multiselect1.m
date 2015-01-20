@@ -1,4 +1,4 @@
-function [DispOutput output ]=multiselect1( Utunca, Umax,cyclenum )
+function [DispOutput output ]=multiselect1( Utunca, Umax,cyclenum,headlines )
 
 % 相对与multiselect0
 % 该脚本把 Epa Ipa Epc Ipc cyclenum轮的 均值 最大差值的绝对值 标准差 进行了
@@ -21,7 +21,7 @@ dataSet=zeros(dataSize,2*filenum);
 
 %载入数据文件 
 for j=1:1:filenum
-    [ a , b ]= textread([filepath filename{1,j}],'%f%f', 'delimiter',',','headerlines',40);
+    [ a , b ]= textread([filepath filename{1,j}],'%f%f', 'delimiter',',','headerlines',headlines);
     dataSet( :,((j-1)*2+1):((j-1)*2+2))=[a,b];
 end
 
