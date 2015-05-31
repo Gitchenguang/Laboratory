@@ -17,7 +17,7 @@ Flag = 1;
 Dev_ACK = hex2dec( 'D' );
 
 % 1> Check the serial status
-if Serial_Obj~='open'
+if Serial_Obj.Status~='open'
     error('MotorSetSpeed:Serial Port is closed!');
 end
 if abs( Speed ) > 500
@@ -34,19 +34,19 @@ end
 
 
 % 2> Confirm and write the speed to write to the device
-fwrite( Serial_Obj , 0 , int8 );
-if fread( Serail_Obj , 1 ) ~= Dev_ACK
+fwrite( Serial_Obj , 0 , 'int8' );
+if fread( Serial_Obj , 1 ) ~= Dev_ACK
     error('MotorSetSpeed:The first time handshaking failed!');
 else
-    fwrite( Serial_Obj , 0 , int8 );
+    fwrite( Serial_Obj , 0 , 'int8' );
     if fread(Serial_Obj , 1 ) ~= Dev_ACK
         error('MotorSetSpeed:The second time handshaking failed!');
     else
-        fwrite( Serial_Obj , Speed_HighBits , int8 );
+        fwrite( Serial_Obj , Speed_HighBits , 'int8' );
            if fread( Serial_Obj , 1 ) ~= Dev_ACK 
                error( 'SetMotorSpeed: Setting motor speed high 8bits failed!' );
            else 
-               fwrite( Serial_Obj , Speed_LowBits , int8 );
+               fwrite( Serial_Obj , Speed_LowBits , 'int8' );
                if fread( Serial_Obj ,1 ) ~= Dev_ACK
                    error( 'SetMotorSpeed: Setting motor speed low 8 bits failed!' );
                else 

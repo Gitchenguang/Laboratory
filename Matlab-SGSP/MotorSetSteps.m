@@ -31,19 +31,19 @@ else
 end
 
 % 2> Confirm and write the steps to write to the device
-fwrite( Serial_Obj , 2 , int8 );
+fwrite( Serial_Obj , 2 , 'int8' );
 if fread( Serail_Obj , 1 ) ~= Dev_ACK
     error('MotorSetSteps:The first time handshaking failed!');
 else
-    fwrite( Serial_Obj , 0 , int8 );
+    fwrite( Serial_Obj , 0 , 'int8' );
     if fread(Serial_Obj , 1 ) ~= Dev_ACK
         error('MotorSetSteps:The second time handshaking failed!');
     else
-        fwrite( Serial_Obj , Steps_HighBits , int8 );
+        fwrite( Serial_Obj , Steps_HighBits , 'int8' );
         if fread( Serial_Obj , 1 ) ~= Dev_ACK 
             error( 'MotorSetSteps: Setting motor steps high 8bits failed!' );
         else 
-            fwrite( Serial_Obj , Steps_LowBits );
+            fwrite( Serial_Obj , Steps_LowBits ,'int8');
             if fread( Serial_Obj ,1 ) ~= Dev_ACK
                 error( 'MotorSetSteps: Setting motor steps low 8 bits failed!' );
             else 

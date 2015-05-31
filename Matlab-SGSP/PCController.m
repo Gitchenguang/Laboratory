@@ -22,7 +22,7 @@ function varargout = PCController(varargin)
 
 % Edit the above text to modify the response to help PCController
 
-% Last Modified by GUIDE v2.5 12-May-2015 20:34:26
+% Last Modified by GUIDE v2.5 28-May-2015 17:17:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,7 +54,6 @@ function PCController_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for PCController
 handles.output = hObject;
-set(handles.edit1,'')
 % Update handles structure
 guidata(hObject, handles);
 
@@ -495,3 +494,10 @@ function edit10_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in pushbutton11.
+function pushbutton11_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
