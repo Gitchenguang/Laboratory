@@ -1,4 +1,4 @@
-function Flag = SetRotateAngle( Serial_Obj , Angle ,Unit)
+function SRU_Time = SetRotateAngle( Serial_Obj , Angle ,Unit)
 % Flag = SetRotateAngle( Serial_Obj , Angle )
 % Serial_Obj : 串口对象
 % Angle ： 旋转角度
@@ -9,6 +9,8 @@ function Flag = SetRotateAngle( Serial_Obj , Angle ,Unit)
 
 
 for i=1:Angle/Unit
+    tic
     SetRotateUnit(Serial_Obj , Unit );
-    pause(3*Unit);
+    SRU_Time(1,i) = toc;
+    pause(3);
 end

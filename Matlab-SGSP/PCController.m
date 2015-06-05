@@ -22,7 +22,7 @@ function varargout = PCController(varargin)
 
 % Edit the above text to modify the response to help PCController
 
-% Last Modified by GUIDE v2.5 28-May-2015 17:17:21
+% Last Modified by GUIDE v2.5 04-Jun-2015 17:09:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,6 +54,7 @@ function PCController_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for PCController
 handles.output = hObject;
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -70,246 +71,6 @@ function varargout = PCController_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-
-
-% --- Executes on button press in Motor1SetSpeed.
-function Motor1SetSpeed_Callback(hObject, eventdata, handles)
-% hObject    handle to Motor1SetSpeed (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in Motor2SetSpeed.
-function Motor2SetSpeed_Callback(hObject, eventdata, handles)
-% hObject    handle to Motor2SetSpeed (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in Motor1ReadPos.
-function Motor1ReadPos_Callback(hObject, eventdata, handles)
-% hObject    handle to Motor1ReadPos (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in Motor2ReadPos.
-function Motor2ReadPos_Callback(hObject, eventdata, handles)
-% hObject    handle to Motor2ReadPos (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in Motor1SetSteps.
-function Motor1SetSteps_Callback(hObject, eventdata, handles)
-% hObject    handle to Motor1SetSteps (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in Motor2SetSteps.
-function Motor2SetSteps_Callback(hObject, eventdata, handles)
-% hObject    handle to Motor2SetSteps (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in Motor1SetMode.
-function Motor1SetMode_Callback(hObject, eventdata, handles)
-% hObject    handle to Motor1SetMode (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in Motor2SetMode.
-function Motor2SetMode_Callback(hObject, eventdata, handles)
-% hObject    handle to Motor2SetMode (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on selection change in popupmenu1.
-function popupmenu1_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu1
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit1_Callback(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit1 as text
-%        str2double(get(hObject,'String')) returns contents of edit1 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit2_Callback(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit2 as text
-%        str2double(get(hObject,'String')) returns contents of edit2 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on selection change in popupmenu2.
-function popupmenu2_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu2 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu2
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on selection change in popupmenu4.
-function popupmenu4_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu4 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu4
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit12_Callback(hObject, eventdata, handles)
-% hObject    handle to edit12 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit12 as text
-%        str2double(get(hObject,'String')) returns contents of edit12 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit12_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit12 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit13_Callback(hObject, eventdata, handles)
-% hObject    handle to edit13 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit13 as text
-%        str2double(get(hObject,'String')) returns contents of edit13 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit13_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit13 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit14_Callback(hObject, eventdata, handles)
-% hObject    handle to edit14 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit14 as text
-%        str2double(get(hObject,'String')) returns contents of edit14 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit14_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit14 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 
@@ -359,6 +120,101 @@ end
 
 
 
+% --- Executes on button press in SetInitialAngle.
+function SetInitialAngle_Callback(hObject, eventdata, handles)
+% hObject    handle to SetInitialAngle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Initial_Angle = get(handles.editInitialAngle , 'String');
+Initial_Angle = str2num( Initial_Angle );
+if rem(Initial_Angle,0.5) ~= 0 
+    error('Better input an integer angle')
+end
+SetRotateAngle(Serial_SGSP , Initial_Anlge/2 ,0.5)
+
+% --- Executes on button press in pushbutton2.
+function pushbutton2_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S_SGSP = get( handles.SerialConnectSGSP , 'UserData' );
+SetRotateAngle( S_SGSP , 10 ,5)
+
+
+function editInitialAngle_Callback(hObject, eventdata, handles)
+% hObject    handle to editInitialAngle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editInitialAngle as text
+%        str2double(get(hObject,'String')) returns contents of editInitialAngle as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editInitialAngle_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editInitialAngle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in SetAngleResolution.
+function SetAngleResolution_Callback(hObject, eventdata, handles)
+% hObject    handle to SetAngleResolution (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+function editAngleResolution_Callback(hObject, eventdata, handles)
+% hObject    handle to editAngleResolution (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editAngleResolution as text
+%        str2double(get(hObject,'String')) returns contents of editAngleResolution as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editAngleResolution_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editAngleResolution (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in PerformMea.
+function PerformMea_Callback(hObject, eventdata, handles)
+% hObject    handle to PerformMea (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in MeaPause.
+function MeaPause_Callback(hObject, eventdata, handles)
+% hObject    handle to MeaPause (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in SetMeaStartAngle.
+function SetMeaStartAngle_Callback(hObject, eventdata, handles)
+% hObject    handle to SetMeaStartAngle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
 function edit5_Callback(hObject, eventdata, handles)
 % hObject    handle to edit5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -379,6 +235,13 @@ function edit5_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in SetMeaFinalAngle.
+function SetMeaFinalAngle_Callback(hObject, eventdata, handles)
+% hObject    handle to SetMeaFinalAngle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
 
 
@@ -404,100 +267,140 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
-function edit7_Callback(hObject, eventdata, handles)
-% hObject    handle to edit7 (see GCBO)
+% --- Executes on button press in SerialConnectSGSP.
+function SerialConnectSGSP_Callback(hObject, eventdata, handles)
+% hObject    handle to SerialConnectSGSP (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit7 as text
-%        str2double(get(hObject,'String')) returns contents of edit7 as a double
+S_Objs = get( handles.pushbuttonSerialDetect , 'UserData' );
+for i=1:length( S_Objs )
+    if S_Objs(1,i).BytesAvailable ~= 0   %读缓冲区清零
+        fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );
+    end
+    fwrite( S_Objs(1,i) , 1 ,'int8' );
+    fwrite( S_Objs(1,i) , 1 ,'int8' );
+    fwrite( S_Objs(1,i) , 1 ,'int8' );
+    fwrite( S_Objs(1,i) , 1 ,'int8' );
+    pause(0.2) % 转台反应需要时间
+    if S_Objs(1,i).BytesAvailable == ( 33+4 )
+        set( handles.SerialConnectSGSP , 'UserData' , S_Objs(1,i) );
+        fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );
+        set( handles.SerialConnectSGSP , 'Enable','off' );
+        msgbox('自动转台串口已连接','自动转台串口');   
+    elseif S_Objs(1,i).BytesAvailable ~= 0
+        fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );%读缓冲区清零
+    end
+end
 
-
-% --- Executes during object creation, after setting all properties.
-function edit7_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit7 (see GCBO)
+% --- Executes on button press in SerialConnectSensor.
+function SerialConnectSensor_Callback(hObject, eventdata, handles)
+% hObject    handle to SerialConnectSensor (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
+% handles    structure with handles and user data (see GUIDATA)
+S_Objs = get( handles.pushbuttonSerialDetect , 'UserData' );
+for i=1:length( S_Objs )
+    if S_Objs(1,i).BytesAvailable ~= 0      %读缓冲区清零
+        fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );
+    end
+    fwrite( S_Objs(1,i) , 1 ,'int8' );pause(0.1);
+    fwrite( S_Objs(1,i) , 1 ,'int8' );pause(0.1);
+    fwrite( S_Objs(1,i) , 1 ,'int8' );pause(0.1);
+    fwrite( S_Objs(1,i) , 1 ,'int8' );pause(0.1);
+    pause(0.1) % 由于arduino板子反应较快，所以这里的延时可以不加
+    if S_Objs(1,i).BytesAvailable == ( 4*2 )
+        set( handles.SerialConnectSensor , 'UserData' , S_Objs(1,i) );
+        msgbox('传感器串口已连接','传感器串口');
+        set( handles.SerialConnectSensor , 'Enable','off' );
+    elseif S_Objs(1,i).BytesAvailable ~= 0
+        fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );%读缓冲区清零
+    end
+    
 end
 
 
-
-function edit8_Callback(hObject, eventdata, handles)
-% hObject    handle to edit8 (see GCBO)
+% --- Executes on button press in pushbuttonSerialDetect.
+function pushbuttonSerialDetect_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonSerialDetect (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit8 as text
-%        str2double(get(hObject,'String')) returns contents of edit8 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit8_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit8 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
+if isempty( get( handles.pushbuttonSerialDetect,'UserData' ))
+    S_Info = instrhwinfo('serial');
+    if isempty( S_Info.SerialPorts )
+         msgbox('没有检测到串口!','串口检测', 'error');
+    elseif length( S_Info.SerialPorts )<=1
+        msgbox( '串口数目不对，检查是否有仪器没有连接','串口检测','error' );
+    else
+        S_Ports = S_Info.SerialPorts;
+        for i=1:length( S_Ports )
+            S_Objs(1,i) = serial( S_Ports{i,1} , 'BaudRate' , 57600 );
+            fopen( S_Objs(1,i) );
+        end
+        set( handles.pushbuttonSerialDetect , 'UserData',S_Objs );
+        msgbox('串口已经打开','串口检测');
+        set( handles.SerialConnectSensor , 'Enable','on' );
+        set( handles.SerialConnectSGSP , 'Enable','on' );
+    end
+else
+    S_Objs = get( handles.pushbuttonSerialDetect,'UserData' );
+    for i=1:length( S_Objs )
+        fclose( S_Objs(1,i) );
+        delete( S_Objs(1,i) );
+        clear S_Objs(1,i);
+    end    
+    S_Info = instrhwinfo('serial');
+    if isempty( S_Info.SerialPorts )
+         msgbox('没有检测到串口!','串口检测', 'error');
+    elseif length( S_Info.SerialPorts )<=1
+        msgbox( '串口数目不对，检查是否有仪器没有连接','串口检测','error' );
+    else
+        S_Ports = S_Info.SerialPorts;
+        for i=1:length( S_Ports )
+            S_Objs(1,i) = serial( S_Ports{i,1} , 'BaudRate' , 57600 );
+            fopen( S_Objs(1,i) );
+        end
+        set( handles.pushbuttonSerialDetect , 'UserData',S_Objs );
+        msgbox('串口已经打开','串口检测');
+        set( handles.SerialConnectSensor , 'Enable','on' );
+        set( handles.SerialConnectSGSP , 'Enable','on' );
+    end
 end
 
 
-
-function edit9_Callback(hObject, eventdata, handles)
-% hObject    handle to edit9 (see GCBO)
+% --- Executes on button press in pushbuttonStopMea.
+function pushbuttonStopMea_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonStopMea (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit9 as text
-%        str2double(get(hObject,'String')) returns contents of edit9 as a double
 
-
-% --- Executes during object creation, after setting all properties.
-function edit9_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit9 (see GCBO)
+% --- Executes on button press in pushbuttonClose.
+function pushbuttonClose_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonClose (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
+% handles    structure with handles and user data (see GUIDATA)
+button=questdlg('是否确认关闭','关闭确认','是','否','是');
+if strcmp(button,'是')
+    S_SGSP = get( handles.SerialConnectSGSP , 'UserData' );
+    S_Sensor = get( handles.SerialConnectSensor , 'UserData' );
+    fclose( S_SGSP );fclose( S_Sensor );
+    delete( S_SGSP );delete( S_Sensor );
+    clear S_SGSP S_Sensor
+    close all
+else
+    return;
 end
 
 
-
-function edit10_Callback(hObject, eventdata, handles)
-% hObject    handle to edit10 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit10 as text
-%        str2double(get(hObject,'String')) returns contents of edit10 as a double
-
-
 % --- Executes during object creation, after setting all properties.
-function edit10_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit10 (see GCBO)
+function SerialConnectSGSP_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SerialConnectSGSP (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
-
-% --- Executes on button press in pushbutton11.
-function pushbutton11_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton11 (see GCBO)
+% --- Executes during object creation, after setting all properties.
+function SerialConnectSensor_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SerialConnectSensor (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+% handles    empty - handles not created until after all CreateFcns called
