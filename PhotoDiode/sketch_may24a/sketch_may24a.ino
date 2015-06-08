@@ -7,7 +7,7 @@ void setup(){
 
 void loop(){
   if( ind=Serial.read()){
-    if( ind == 0){
+    if( ind == 2){
       dat=analogRead(Photodiode);
       datH=dat/256;datL=dat%256;
       Serial.write(datH);Serial.write(datL);

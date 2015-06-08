@@ -1,18 +1,7 @@
-function Flag = SetRotateUnit( Serial_Obj , Angle )
-% Flag = SetRotateAngle( Serial_Obj , Angle )
-% Flag : Flag==0 程序顺利执行完成
-% Serial_Obj : 串口对象
-% Angle 电机旋转角度 
-
-% 这个函数用来设置转台的旋转角度的大小
-% 对于此平台，电机64微步==平台0.01度
-% Edited by chenguang 2015-05-28 && Email：guang@zchenguang.com
-% -------------------------------------------------------------------------
-
-% 换算角度为电机微步
-Steps_Element = 32;
-Angle_Element = 0.005;
-Steps = Angle/Angle_Element*Steps_Element;
+function [ Flag ] = SetRotateSteps( Serial_Obj , Steps ) 
+% [ Flag ] = SetRotateSteps( S_Obj , Steps ) 
+% 让电机旋转一定的步进数
+% Edited by chenguang 2015-06-08 && guang@zchenguang.com
 
 % Constants and varibles might be used 
 Flag = 1; 
