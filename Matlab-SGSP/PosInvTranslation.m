@@ -1,5 +1,6 @@
-function [ CurrentRawPos CycleFlag ] = PosInvTranslation( RotateAngle ,Position_Info )
-% 将要旋转的角度逆向转换为转台的控制器的原始位置,这里将只对应出同一周期的数值
+function [ New_Pos_Info ]= PosInvTranslation( RotateAngle ,Position_Info )
+% 将要旋转的角度逆向转换为转台的控制器的原始位置,这里将推算出最终转台的周期位置
+% 并将更新Position_Info
 
 % Edited by chenguang 2015-06-07 && Email:guang@zchenguang.com
 
@@ -10,11 +11,27 @@ function [ CurrentRawPos CycleFlag ] = PosInvTranslation( RotateAngle ,Position_
 % Position_Info.Current_Angle 
 % Position_Info.CycleFlag 
 
+New_Pos_Info.Origin_CyclePostion = Position_Info.Origin_CyclePostion;
+New_Pos_Info.Origin_Angle = Position_Info.Origin_Angle;
+
+New_Pos_Info.Current_Angle = Position_Info.Current_Angle + RotateAngle;
+New_Pos_Info.CycleFlag = Position_Info.CycleFlag ;
+
 Steps = RotateAngle/0.00015625;
 FinalRawPos = Steps + Position_Info.Current_CyclePostion;
-CycleFlag = fix( FinalRawPos/1000000 );
-if CycleFlag < 0
-    CurrentRawPos = FinalRawPos - CycleFlag*1000000 + 1000000;  % 换成补码的形式
-else
-    CurrentRawPos = FinalRawPos - CycleFlag*1000000;
+if FinalRawPos < 0
+    while FinalRawPos < 0
+        New_Pos_Info.CycleFlag = -1 + New_Pos_Info.CycleFlag ;
+        New_Pos_Info.Current_CyclePostion = 1000000 + FinalRawPos;
+        FinalRawPos = FinalRawPos + 1000000;
+    end
+elseif FinalRawPos > 1000000
+    while FinalRawPos > 1000000
+        New_Pos_Info.CycleFlag = 1 + New_Pos_Info.CycleFlag;
+        New_Pos_Info.Current_CyclePostion = FinalRawPos - 1000000;
+        FinalRawPos = FinalRawPos - 1000000;
+    end
+else 
+    New_Pos_Info.Current_CyclePostion = FinalRawPos;
+    New_Pos_Info.CycleFlag = 0 + New_Pos_Info.CycleFlag;
 end

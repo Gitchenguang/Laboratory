@@ -19,29 +19,31 @@ if Steps >= 0    % 如果不为负，则只拆分就可以，否则转换成补码的形式
     Steps_HighBits = fix( Steps / 256 );
     Steps_LowBits = Steps - Steps_HighBits*256;
 else 
-      Steps_HighBits = fix( Steps  / 256 );
-      Steps_LowBits = abs( Steps - Steps_HighBits*256);
+    % 求补码
+    Steps_Compl = 2^15 + Steps;  % 最高位第15位为符号位
+    Steps_LowBits = abs( Steps_Compl -  fix( Steps_Compl  / 256 )*256);
+    Steps_HighBits = fix( Steps_Compl  / 256 ) + 128 ;
 end
 
 % 2> Confirm and write the steps to write to the device
-fwrite( Serial_Obj , 2 , 'int8' );
+fwrite( Serial_Obj , 2 , 'uint8' );
 if fread( Serial_Obj , 1 ) ~= Dev_ACK
     error('MotorSetSteps:The first time handshaking failed!');
 else
-    fwrite( Serial_Obj , 0 , 'int8' );
+    fwrite( Serial_Obj , 0 , 'uint8' );
     if fread(Serial_Obj , 1 ) ~= Dev_ACK
         error('MotorSetSteps:The second time handshaking failed!');
     else
-        fwrite( Serial_Obj , Steps_HighBits , 'int8' );
+        fwrite( Serial_Obj , Steps_HighBits , 'uint8' );
         if fread( Serial_Obj , 1 ) ~= Dev_ACK 
             error( 'MotorSetSteps: Setting motor steps high 8bits failed!' );
         else 
-            fwrite( Serial_Obj , Steps_LowBits ,'int8');
+            fwrite( Serial_Obj , Steps_LowBits ,'uint8');
             if fread( Serial_Obj ,1 ) ~= Dev_ACK
                 error( 'MotorSetSteps: Setting motor steps low 8 bits failed!' );
             else 
                 Flag = 0;
-                pause( abs(Steps)*0.00045 );
+                pause( abs(Steps)*0.0004096 );
             end
         end 
     end

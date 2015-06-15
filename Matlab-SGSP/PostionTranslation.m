@@ -20,10 +20,11 @@ Current_CyclePostion = Position_Info.Current_CyclePostion;
 CycleFlag = Position_Info.CycleFlag;
 
 % Judge the CycleFlag 
-if CycleFlag >=0
+if CycleFlag ==0 
+    Steps_Took = Current_CyclePostion - Origin_CyclePostion;
+else
     Steps_Took = CycleFlag*1000000 + Current_CyclePostion - Origin_CyclePostion;
-elseif CycleFlag < 0 
-    Steps_Took = CycleFlag*1000000 - (Current_CyclePostion - Origin_CyclePostion) ;  
+
 end
 Angle_Rotated = Steps_Took * 0.00015625;
 Current_Angle = Origin_Angle + Angle_Rotated;

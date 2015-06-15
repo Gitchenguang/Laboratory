@@ -22,7 +22,7 @@ function varargout = PCController(varargin)
 
 % Edit the above text to modify the response to help PCController
 
-% Last Modified by GUIDE v2.5 08-Jun-2015 21:37:52
+% Last Modified by GUIDE v2.5 12-Jun-2015 11:31:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -138,6 +138,15 @@ Position_Info.Current_CyclePostion = MotorPos;
 Position_Info.Current_Angle = 0; 
 
 Position_Info.CycleFlag = 0;
+
+% 初始化坐标系
+handles.hPlot = [];
+handles.Plot_Scale = 10;
+axis( handles.PlotAxes , [0 handles.Plot_Scale 0 5 ]);  
+handles.Moving_X_Axis = [ 0 handles.Plot_Scale 0 5  ];
+
+set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
+set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));
 
 set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
 %*****************************************************************************
@@ -269,7 +278,7 @@ set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
 
 % Position_Info.CycleFlag = 0;
 % set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
-
+guidata( hObject , handles );
 function EditAnyRoateAngle_Callback(hObject, eventdata, handles)
 % hObject    handle to EditAnyRoateAngle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -303,7 +312,7 @@ if isempty(get( handles.SerialConnectSGSP , 'UserData')) &&  isempty(get( handle
 else
    EditAngleResolution_Status = get(handles.EditAngleResolution , 'Enable');
    if strcmp(EditAngleResolution_Status , 'off')
-      set( handles.EditAnyRoateAngle , 'Enable', 'on');
+      set( handles.EditAngleResolution , 'Enable', 'on');
    else
       set( handles.EditAngleResolution , 'Enable', 'off');
       EditAngleResolution = str2num( get( handles.EditAngleResolution , 'String' ) );
@@ -313,7 +322,7 @@ else
       end
    end
 end
-
+guidata(hObject,handles);
 function EditAngleResolution_Callback(hObject, eventdata, handles)
 % hObject    handle to EditAngleResolution (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -342,23 +351,156 @@ function PerformMea_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+set( handles.PerformMea , 'UserData' , 1 );  % 1代表执行测量，0代表停止测量，置零将在停止测量处执行
+
+% 获得串口对象
+S_SGSP = get( handles.SerialConnectSGSP , 'UserData' );
+S_Sensor = get( handles. SerialConnectSensor , 'UserData' );
+if S_SGSP.BytesAvailable
+    fread( S_SGSP , S_SGSP.BytesAvailable );%读缓冲区清零
+end
+if S_Sensor.BytesAvailable
+    fread( S_Sensor , S_Sensor.BytesAvailable );%读缓冲区清零
+end
+
+% 获得位置信息
+Position_Info = get( handles.pushbuttonOriginCheck , 'UserData' );
+% 获取以往电压信息
+if isempty( get( handles.ShowCurrentVoltage , 'UserData') )
+    Voltage_History = [];
+    set( handles.ShowCurrentVoltage , 'UserData' , Voltage_History );
+end
+
+
 % 获得测量的参数
 Start_Angle = str2num( get( handles.EditMeaStartAngle , 'String') );
-Angle_Resolution = str2num( get( handles.EditAngleResolution , 'String') );
 Final_Angle = str2num( get( handles.EditMeaFinalAngle , 'String' ) );
-% 开始设定定时器
-Sensor_Time_Max = 0.15;
-Set_Rotate_Time_Max = 0.13; 
-Angle_Resolution_Time =  Angle_Resolution/0.005*0.015;
 
-Timer_Period = Angle_Resolution_Time + Sensor_Time_Max + Set_Rotate_Time_Max ;
-handles.Timer=timer('Period',Timer_Period,'ExecutionMode','fixedRate', 'TimerFcn',{@Timer_Callback,handles});
+Mea_Step_Angle = 1 ;
 
-handles.Start_Angle = Start_Angle;
-handles.Angle_Resolution = Angle_Resolution;
-handles.Final_Angle  = Final_Angle;
+while( get( handles.PerformMea , 'UserData' ) )
+    if Start_Angle < Final_Angle
+        % 正常测量
+        % 1> 步进1度
+        Dat = RotateAndRecord( S_SGSP , handles.Rotate_Scan_Rate , S_Sensor );
+        % 1.1> 获得一组测量的数据进行处理一下转成电压值
+        Total_Num = length( Dat )/2;
+        i=1:1:Total_Num;
+        Voltage_Part( 1,i ) = (Dat( 1,2*i-1 )*256 + Dat( 1,2*i ))/1023*5;
+        % 1.2> 添加到整体的电压值中
+        Voltage_History = get( handles.ShowCurrentVoltage , 'UserData');
+           
+        Voltage_History.Volt( 1 , (length( Voltage_History.Volt )+1):(length( Voltage_History.Volt )+Total_Num) ) = Voltage_Part;
+        Voltage_Part_Time = (length( Voltage_History.Time )+1) : (length( Voltage_History.Time )+Total_Num);
+        Voltage_Part_Time = Voltage_Part_Time*handles.Sample_Rate;
+        Voltage_History.Time( 1 , (length( Voltage_History.Time )+1):(length( Voltage_History.Time )+Total_Num) ) = Voltage_Part_Time;
+        % 1.3> 并画至坐标系中 
+        if (~isempty( Voltage_History ) ) && ( isempty( handles.hPlot ) )
+            handles.hPlot = plot(handles.PlotAxes,Voltage_History.Time , Voltage_History.Volt );
+        end
+        % 1.3.1 > 如果时间长度没有超过当前时间的范围，则不需要更新，如果超过了才需要更新Moving_X_Axis 
+        if length( Voltage_History.Time ) > handles.Moving_X_Axis/handles.Sample_Rate
+            handles.Moving_X_Axis( 1 , 1:2 ) = handles.Moving_X_Axis( 1 , 1:2 ) + length( Voltage_Part )*handles.Sample_Rate;
+        end
+        set( handles.hPlot,'XData',Voltage_History.Time,'YData',Voltage_History.Volt );
+        axis( handles.PlotAxes, handles.Moving_X_Axis );    
+        Voltage_Part = [];  % 用完要角Voltage_Part 清空，防止其冗余出的长度影响Voltage_History 的更新
+        set( handles.ShowCurrentVoltage , 'UserData',Voltage_History);
+        
+        
+        New_Pos_Info = PosInvTranslation( Mea_Step_Angle ,Position_Info );
+        MotorPos = MotorReadPos( S_SGSP );
+        if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+            SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
+        end
+        % 2> 更新位置信息
+        Position_Info = New_Pos_Info;
+        set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
+        set( handles.ShowCurrentAngle , 'String' , num2str(Position_Info.Current_Angle  ) );
+        set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));
 
-start( handles.Timer );
+        % 3> 判断是否到达最大值，恢复起始角
+        if Position_Info.Current_Angle >= Final_Angle
+            for i=1:1:(Final_Angle-Start_Angle)
+                SetRotateUnit( S_SGSP , -1 );
+            end
+            New_Pos_Info = PosInvTranslation( -(Final_Angle-Start_Angle) ,Position_Info );
+            MotorPos = MotorReadPos( S_SGSP );
+            if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+                SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
+            end
+            % 2> 更新位置信息
+            Position_Info = New_Pos_Info;
+
+            set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
+            set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
+            set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));        
+        end    
+    elseif Start_Angle > Final_Angle
+        % 反向测量
+        % 1> 步进1度
+        Dat = RotateAndRecord( S_SGSP , -handles.Rotate_Scan_Rate , S_Sensor );
+        % 1.1> 获得一组测量的数据进行处理一下转成电压值
+        Total_Num = length( Dat )/2;
+        i=1:1:Total_Num;
+        Voltage_Part( 1,i ) = (Dat( 1,2*i-1 )*256 + Dat( 1,2*i ))/1023*5;
+        % 1.2> 添加到整体的电压值中
+        Voltage_History = get( handles.ShowCurrentVoltage , 'UserData');    
+
+        Voltage_History.Volt( 1 , (length( Voltage_History.Volt )+1):(length( Voltage_History.Volt )+Total_Num) ) = Voltage_Part;
+        Voltage_Part_Time = (length( Voltage_History.Time )+1) : (length( Voltage_History.Time )+Total_Num);
+        Voltage_Part_Time = Voltage_Part_Time*handles.Sample_Rate;
+        Voltage_History.Time( 1 , (length( Voltage_History.Time )+1):(length( Voltage_History.Time )+Total_Num) ) = Voltage_Part_Time;
+        % 1.3> 并画至坐标系中
+        if (~isempty( Voltage_History ) ) && ( isempty( handles.hPlot ) )
+            handles.hPlot = plot(handles.PlotAxes,Voltage_History.Time , Voltage_History.Volt );
+        end
+        
+        % 1.3.1 > 如果时间长度没有超过当前现实的范围，则不需要更新，如果超过了才需要更新Moving_X_Axis 
+        if length( Voltage_History.Time ) > handles.Moving_X_Axis/handles.Sample_Rate
+            handles.Moving_X_Axis( 1 , 1:2 ) = handles.Moving_X_Axis( 1 , 1:2 ) + length( Voltage_Part )*handles.Sample_Rate;
+        end
+        set( handles.hPlot,'XData',Voltage_History.Time,'YData',Voltage_History.Volt );
+        axis( handles.PlotAxes,handles.Moving_X_Axis );  
+        
+        Voltage_Part = [];  % 用完要角Voltage_Part 清空，防止其冗余出的长度影响Voltage_History 的更新
+        set( handles.ShowCurrentVoltage , 'UserData',Voltage_History);
+        
+        New_Pos_Info = PosInvTranslation( -Mea_Step_Angle ,Position_Info );
+        MotorPos = MotorReadPos( S_SGSP );
+        if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+            SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
+        end
+        % 2> 更新位置信息
+        Position_Info = New_Pos_Info;
+        set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
+        set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
+        set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));
+        % 3> 判断是否到达最大值，恢复起始角
+        if Position_Info.Current_Angle <= Final_Angle
+            for i=1:1:(Start_Angle-Final_Angle)
+                SetRotateUnit( S_SGSP , 1 );
+            end
+            New_Pos_Info = PosInvTranslation( -(Final_Angle-Start_Angle) ,Position_Info );
+            MotorPos = MotorReadPos( S_SGSP );
+            if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+                SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
+            end
+            % 2> 更新位置信息
+            Position_Info = New_Pos_Info.Current_CyclePostion;
+            set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
+            set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
+            set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));        
+        end
+    end
+end
+
+if S_SGSP.BytesAvailable
+    fread( S_SGSP , S_SGSP.BytesAvailable );%读缓冲区清零
+end
+if S_Sensor.BytesAvailable
+    fread( S_Sensor , S_Sensor.BytesAvailable );%读缓冲区清零
+end
 
 guidata(hObject,handles);
 
@@ -368,91 +510,7 @@ S_SGSP = get( handles.SerialConnectSGSP , 'UserData' );
 S_Sensor = get( handles. SerialConnectSensor , 'UserData' );
 % 获得位置信息
 Position_Info = get( handles.pushbuttonOriginCheck , 'UserData' );
-% 判断是正向测量还是反向测量
-if handles.Start_Angle < handles.Final_Angle
-    % 正常测量
-    % 1> 步进一个Resolution 角度
-    SetRotateUnit( S_SGSP , handles.Angle_Resolution );
-    [ CurrentRawPos , CycleFlag ] = PosInvTranslation( handles.Angle_Resolution ,Position_Info );
-    MotorPos = MotorReadPos( S_SGSP );
-    if CurrentRawPos ~= MotorPos;
-        SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
-    end
-    % 2> 更新位置信息
-    Position_Info.Current_CyclePostion = CurrentRawPos;
-    Position_Info.Current_Angle = handles.Angle_Resolution + Position_Info.Current_Angle;
-    Position_Info.CycleFlag = CycleFlag + Position_Info.CycleFlag; 
-            
-    set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
-    set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
-    set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));
-    
-    % 3> 判断是否到达最大值，恢复起始角
-    if Position_Info.Current_Angle >= handles.Final_Angle
-        % 停止定时器
-        stop( handles.Timer );
-        for i=1:1:(handles.Final_Angle-handles.Start_Angle)
-            SetRotateUnit( S_SGSP , -1 );
-        end
-        [ CurrentRawPos , CycleFlag ] = PosInvTranslation( -(handles.Final_Angle-handles.Start_Angle) ,Position_Info );
-        MotorPos = MotorReadPos( S_SGSP );
-        if CurrentRawPos ~= MotorPos;
-            SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
-        end
-        % 2> 更新位置信息
-        Position_Info.Current_CyclePostion = CurrentRawPos;
-        Position_Info.Current_Angle = -(handles.Final_Angle-handles.Start_Angle) + Position_Info.Current_Angle;
-        Position_Info.CycleFlag = CycleFlag + Position_Info.CycleFlag; 
 
-        set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
-        set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
-        set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));        
-
-        % 重新启动定时器
-        start( handles.Timer );
-    end    
-elseif handles.Start_Angle > handles.Final_Angle
-    % 反向测量
-    % 1> 步进一个 负的 Resolution 角度
-    SetRotateUnit( S_SGSP , -handles.Angle_Resolution );
-    [ CurrentRawPos , CycleFlag ] = PosInvTranslation( -handles.Angle_Resolution ,Position_Info );
-    MotorPos = MotorReadPos( S_SGSP );
-    if CurrentRawPos ~= MotorPos;
-        SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
-    end
-    % 2> 更新位置信息
-    Position_Info.Current_CyclePostion = CurrentRawPos;
-    Position_Info.Current_Angle = -handles.Angle_Resolution + Position_Info.Current_Angle;
-    Position_Info.CycleFlag = CycleFlag + Position_Info.CycleFlag; 
-            
-    set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
-    set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
-    set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));
-    % 3> 判断是否到达最大值，恢复起始角
-    if Position_Info.Current_Angle <= handles.Final_Angle
-        % 停止定时器
-        stop( handles.Timer );
-        for i=1:1:(handles.Start_Angle-handles.Final_Angle)
-            SetRotateUnit( S_SGSP , 1 );
-        end
-        [ CurrentRawPos , CycleFlag ] = PosInvTranslation( -(handles.Final_Angle-handles.Start_Angle) ,Position_Info );
-        MotorPos = MotorReadPos( S_SGSP );
-        if CurrentRawPos ~= MotorPos;
-            SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
-        end
-        % 2> 更新位置信息
-        Position_Info.Current_CyclePostion = CurrentRawPos;
-        Position_Info.Current_Angle = -(handles.Final_Angle-handles.Start_Angle) + Position_Info.Current_Angle;
-        Position_Info.CycleFlag = CycleFlag + Position_Info.CycleFlag; 
-
-        set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
-        set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
-        set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));        
-
-        % 重新启动定时器
-        start( handles.Timer );
-    end
-end
 guidata(hObject,handles);
 
 
@@ -462,12 +520,8 @@ function MeaPause_Callback(hObject, eventdata, handles)
 % hObject    handle to MeaPause (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-MeaTimer = handles.Timer;
-if strcmp(MeaTimer.Running,'off')
-    start(handles.Timer);
-elseif strcmp(MeaTimer.Running,'on')
-    stop(handles.Timer);
-end
+
+set( handles.PerformMea , 'UserData' , 0 );  % 1代表执行测量，0代表停止测量，置零将在停止测量处执行
 
 % --- Executes on button press in SetMeaStartAngle.
 function SetMeaStartAngle_Callback(hObject, eventdata, handles)
@@ -477,10 +531,17 @@ function SetMeaStartAngle_Callback(hObject, eventdata, handles)
 
 Position_Info = get( handles.pushbuttonOriginCheck , 'UserData' );
 S_SGSP = get( handles.SerialConnectSGSP , 'UserData');
+S_Sensor = get( handles.SerialConnectSensor , 'UserData');
+
 % 确认串口对象都已经存在
 if isempty(get( handles.SerialConnectSGSP , 'UserData')) &&  isempty(get( handles.SerialConnectSensor , 'UserData' ))
     msgbox('请先确保转台与传感器都已连接好！', '自定义起始角');
 else
+    % 只要启动了该配置，则之前的数据就要被抹除
+    Voltage_History.Volt=[];Voltage_History.Time=[]; 
+    handles.Moving_X_Axis = [ 0 handles.Plot_Scale 0 5  ];
+    set( handles.ShowCurrentVoltage , 'UserData' , Voltage_History ); % 由于这里是重新配置测量配置，所以需要将之前的Voltage_History 清零
+   
    EditMeaStartAngle_Status = get(handles.EditMeaStartAngle , 'Enable');
    if strcmp(EditMeaStartAngle_Status , 'off')
       set( handles.EditMeaStartAngle , 'Enable', 'on');
@@ -499,10 +560,10 @@ else
                SetRotateUnit( S_SGSP , 1 );
             end
             % 旋转后，记录当前旋转的角度的值包括原始位置值与CycleFlag值，并适当修正
-            [ CurrentRawPos , CycleFlag ] = PosInvTranslation( Angle_To_Rotate ,Position_Info );
+            New_Pos_Info = PosInvTranslation( Angle_To_Rotate ,Position_Info );
             MotorPos = MotorReadPos( S_SGSP );
-            if CurrentRawPos ~= MotorPos;
-                SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
+            if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+                SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
             end
                 
         elseif Angle_To_Rotate < 0
@@ -510,22 +571,21 @@ else
             for i=1:1:abs(Angle_To_Rotate)
                 SetRotateUnit( S_SGSP , -1 );
             end
-            [ CurrentRawPos , CycleFlag ] = PosInvTranslation( Angle_To_Rotate ,Position_Info );
+            New_Pos_Info = PosInvTranslation( Angle_To_Rotate ,Position_Info );
             MotorPos = MotorReadPos( S_SGSP );
-            if CurrentRawPos ~= MotorPos;
-                SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
+            if New_Pos_Info ~= MotorPos;
+                SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
             end
         end
         % 旋转完成后将 RawPosition 与 CycleFlags写入Position_Info结构体中
-        Position_Info.Current_CyclePostion = CurrentRawPos;
-        Position_Info.Current_Angle = Angle_To_Rotate+Position_Info.Current_Angle;
-        Position_Info.CycleFlag = CycleFlag + Position_Info.CycleFlag;    
+        Position_Info = New_Pos_Info;
         set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
-        
+        set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
+        set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));
      end
    end
 end
-
+guidata( hObject , handles );
 
 function EditMeaStartAngle_Callback(hObject, eventdata, handles)
 % hObject    handle to EditMeaStartAngle (see GCBO)
@@ -559,6 +619,11 @@ function SetMeaFinalAngle_Callback(hObject, eventdata, handles)
 if isempty(get( handles.SerialConnectSGSP , 'UserData')) &&  isempty(get( handles.SerialConnectSensor , 'UserData' ))
     msgbox('请先确保转台与传感器都已连接好！', '测量终止角');
 else
+   % 抹除之前的数据 
+   Voltage_History.Volt=[];Voltage_History.Time=[]; 
+   set( handles.ShowCurrentVoltage , 'UserData' , Voltage_History ); % 由于这里是重新配置测量配置，所以需要将之前的Voltage_History 清零
+   handles.Moving_X_Axis = [ 0 handles.Plot_Scale 0 5  ];
+   
    EditMeaFinalAngle_Status = get(handles.EditMeaFinalAngle , 'Enable');
    if strcmp(EditMeaFinalAngle_Status , 'off')
       set( handles.EditMeaFinalAngle , 'Enable', 'on');
@@ -571,6 +636,7 @@ else
       end
    end
 end
+guidata( hObject , handles );
 
 function EditMeaFinalAngle_Callback(hObject, eventdata, handles)
 % hObject    handle to EditMeaFinalAngle (see GCBO)
@@ -611,9 +677,10 @@ function SerialConnectSGSP_Callback(hObject, eventdata, handles)
         fwrite( S_Objs(1,i) , 1 ,'int8' );
         pause(0.2) % 转台反应需要时间
         if S_Objs(1,i).BytesAvailable == ( 33+4 )
+            fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );%读缓冲区清零
             set( handles.SerialConnectSGSP , 'UserData' , S_Objs(1,i) );
-            fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );
             set( handles.SerialConnectSGSP , 'Enable','off' );
+            handles.Rotate_Scan_Rate = 6400;
             msgbox('自动转台串口已连接','自动转台串口');  
             
             % 检测如果都转台和传感器都连接OK，那么Enable设置控件
@@ -622,21 +689,21 @@ function SerialConnectSGSP_Callback(hObject, eventdata, handles)
                     set( handles.pushbuttonOriginCheck , 'Enable','on' );
                     set( handles.SetInitialAngle , 'Enable','on' );  
                     set( handles.SetMeaStartAngle , 'Enable','on' );  
-                    set( handles.SetAngleResolution , 'Enable','on' );  
+                   % set( handles.SetAngleResolution , 'Enable','on' );  
                     set( handles.SetMeaFinalAngle , 'Enable','on' );
                     set( handles.PerformMea , 'Enable','on' );  
                     set( handles.MeaPause , 'Enable','on' );  
                     set( handles.pushbuttonStopMea , 'Enable','on' );
             end
             
-        elseif S_Objs(1,i).BytesAvailable ~= 0
+        elseif S_Objs(1,i).BytesAvailable
             fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );%读缓冲区清零
         end
     end
 %else
 %    msgbox('自动转台串口已连接，请不要重复连接','自动转台串口');  
 %end
-
+guidata( hObject , handles );
 
 
 % --- Executes on button press in SerialConnectSensor.
@@ -657,27 +724,37 @@ function SerialConnectSensor_Callback(hObject, eventdata, handles)
         fwrite( S_Objs(1,i) , 1 ,'int8' );pause(0.1);
         pause(0.1) % 由于arduino板子反应较快，所以这里的延时可以不加
         if S_Objs(1,i).BytesAvailable == ( 4*2 )
-            set( handles.SerialConnectSensor , 'UserData' , S_Objs(1,i) );
+            fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );%读缓冲区清零 
             msgbox('传感器串口已连接','传感器串口');
             set( handles.SerialConnectSensor , 'Enable','off' );
-            
+            fclose( S_Objs( 1,i ) );
+            S_Objs(1,i).InputBufferSize = 10240;        % 将输入缓冲区的大小调整至10240 bytes 以方便接收数据
+            % 默认的传感器的采样速率 
+            handles.Sample_Rate = 0.01;
+            fopen( S_Objs( 1,i ) );
+            set( handles.SerialConnectSensor , 'UserData' , S_Objs(1,i) );
+            % 开始设定定时器
+            % Set_Rotate_Time_Max = 0.13; 
+%             Sensor_Time_Max = 0.05;
+%             handles.Timer=timer('Period',Sensor_Time_Max,'ExecutionMode','fixedRate', 'TimerFcn',{@Timer_Callback,handles});
             % 检测如果都转台和传感器都连接OK，那么Enable设置控件
             if ~isempty( get( handles.SerialConnectSGSP , 'UserData' ) ) && ~isempty( get( handles.SerialConnectSGSP , 'UserData' ) )
                     % 将设置类的控件全部Enable
                     set( handles.pushbuttonOriginCheck , 'Enable','on' );
                     set( handles.SetInitialAngle , 'Enable','on' );  
                     set( handles.SetMeaStartAngle , 'Enable','on' );  
-                    set( handles.SetAngleResolution , 'Enable','on' );  
+                   % set( handles.SetAngleResolution , 'Enable','on' );  
                     set( handles.SetMeaFinalAngle , 'Enable','on' );
                     set( handles.PerformMea , 'Enable','on' );  
                     set( handles.MeaPause , 'Enable','on' );  
                     set( handles.pushbuttonStopMea , 'Enable','on' );
             end
             
-        elseif S_Objs(1,i).BytesAvailable ~= 0
+        elseif S_Objs(1,i).BytesAvailable
             fread( S_Objs(1,i) , S_Objs(1,i).BytesAvailable );%读缓冲区清零
         end
     end
+guidata( hObject , handles );
 %else
 %    msgbox('传感器串口已连接，请不要重复连接','传感器串口');
 %end
@@ -710,7 +787,7 @@ if isempty( get( handles.pushbuttonSerialDetect,'UserData' ))
         set( handles.pushbuttonOriginCheck , 'Enable','off' );
         set( handles.SetInitialAngle , 'Enable','off' );  
         set( handles.SetMeaStartAngle , 'Enable','off' );  
-        set( handles.SetAngleResolution , 'Enable','off' );  
+        %set( handles.SetAngleResolution , 'Enable','off' );  
         set( handles.SetMeaFinalAngle , 'Enable','off' );
         set( handles.PerformMea , 'Enable','off' );  
         set( handles.MeaPause , 'Enable','off' );  
@@ -744,7 +821,7 @@ else
         set( handles.pushbuttonOriginCheck , 'Enable','off' );
         set( handles.SetInitialAngle , 'Enable','off' );  
         set( handles.SetMeaStartAngle , 'Enable','off' );  
-        set( handles.SetAngleResolution , 'Enable','off' );  
+        %set( handles.SetAngleResolution , 'Enable','off' );  
         set( handles.SetMeaFinalAngle , 'Enable','off' );
         set( handles.PerformMea , 'Enable','off' );  
         set( handles.MeaPause , 'Enable','off' );  
@@ -759,35 +836,46 @@ function pushbuttonStopMea_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonStopMea (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-stop( handles.Timer);
-delete( handles.Timer );
+
+set( handles.PerformMea , 'UserData' , 0 );  % 1代表执行测量，0代表停止测量，置零将在停止测量处执行
 
 Position_Info = get( handles.pushbuttonOriginCheck , 'UserData' );
 S_SGSP = get( handles.SerialConnectSGSP , 'UserData' );
 S_Sensor = get( handles.SerialConnectSensor , 'UserData' );
 
-% handles.Start_Angle = Start_Angle;
-% handles.Angle_Resolution = Angle_Resolution;
-% handles.Final_Angle  = Final_Angle;
-% 正负转动的标志
-Flag = abs(Position_Info.Current_Angle - handles.Start_Angle)/(Position_Info.Current_Angle - handles.Start_Angle);
+% 获得测量的参数
+Start_Angle = str2num( get( handles.EditMeaStartAngle , 'String') );
+Final_Angle = str2num( get( handles.EditMeaFinalAngle , 'String' ) );
 
-for i=1:1:( abs( (Position_Info.Current_Angle - handles.Start_Angle)/handles.Angle_Resolution ) )
-    SetRotateUnit( S_SGSP , -handles.Angle_Resolution*Flag );
-    [ CurrentRawPos , CycleFlag ] = PosInvTranslation(  -handles.Angle_Resolution*Flag ,Position_Info );
-    MotorPos = MotorReadPos( S_SGSP );
-    if CurrentRawPos ~= MotorPos;
-        SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
+% 是否要保存测量的数据---------------------------?
+if ~isempty( get( handles.ShowCurrentVoltage , 'UserData') )
+    button=questdlg('是否要保存数据','确认','是','否','是');
+    if strcmp(button,'是')
+        Voltage_History = get( handles.ShowCurrentVoltage , 'UserData');
+        [ name , path ] = uiputfile();
+        save( [ path ,name ] , 'Voltage_History' );
     end
-    % 2> 更新位置信息
-    Position_Info.Current_CyclePostion = CurrentRawPos;
-    Position_Info.Current_Angle = -handles.Angle_Resolution*Flag + Position_Info.Current_Angle;
-    Position_Info.CycleFlag = CycleFlag + Position_Info.CycleFlag; 
-            
-    set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
-    set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
-    set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));    
 end
+
+% 正负转动的标志
+if Position_Info.Current_Angle - Start_Angle ~=0
+    Flag = abs(Position_Info.Current_Angle - Start_Angle)/(Position_Info.Current_Angle - Start_Angle);
+    % 回归原位置
+    for i=1:1:( abs( Position_Info.Current_Angle - Start_Angle ) )
+        SetRotateUnit( S_SGSP , -Flag);
+        New_Pos_Info = PosInvTranslation(  -Flag ,Position_Info );
+        MotorPos = MotorReadPos( S_SGSP );
+        if CurrentRawPos ~= MotorPos;
+            SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
+        end
+        % 2> 更新位置信息
+        Position_Info = New_Pos_Info.Current_CyclePostion;
+        set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
+        set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
+        set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));    
+    end
+end
+guidata( hObject , handles );
 
 % --- Executes on button press in pushbuttonClose.
 function pushbuttonClose_Callback(hObject, eventdata, handles)
@@ -796,14 +884,26 @@ function pushbuttonClose_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 button=questdlg('是否确认关闭','关闭确认','是','否','是');
 if strcmp(button,'是')
+    % 是否要保存测量的数据---------------------------?
+    if ~isempty( get( handles.ShowCurrentVoltage , 'UserData') )
+        button=questdlg('是否要保存数据','确认','是','否','是');
+        if strcmp(button,'是')
+            Voltage_History = get( handles.ShowCurrentVoltage , 'UserData');
+            [ name , path ] = uiputfile();
+            save( [ path ,name ] , 'Voltage_History' );
+        end
+    end
     S_SGSP = get( handles.SerialConnectSGSP , 'UserData' );
     S_Sensor = get( handles.SerialConnectSensor , 'UserData' );
-    stop( handles.Timer );
-    delete( handles.Timer );
-    fclose( S_SGSP );fclose( S_Sensor );
-    delete( S_SGSP );delete( S_Sensor );
-    clear S_SGSP S_Sensor
-    close all
+   % stop( handles.Timer );
+   % delete( handles.Timer );
+   % if strcmp(handles.Timer.Running,'off')
+   %     stop( handles.Timer );
+   %end
+   fclose( S_SGSP );fclose( S_Sensor );
+   delete( S_SGSP );delete( S_Sensor );
+   clear S_SGSP S_Sensor
+   close all
 else
     return;
 end
@@ -833,6 +933,13 @@ Position_Info = get( handles.pushbuttonOriginCheck , 'UserData' );
 S_SGSP = get( handles.SerialConnectSGSP , 'UserData' );
 S_Sensor = get( handles.SerialConnectSensor , 'UserData' );
 
+if S_SGSP.BytesAvailable
+            fread( S_SGSP , S_SGSP.BytesAvailable );%读缓冲区清零
+end
+if S_Sensor.BytesAvailable
+            fread( S_Sensor , S_Sensor.BytesAvailable );%读缓冲区清零
+end
+
 % 确认串口对象都已经存在
 if isempty(get( handles.SerialConnectSGSP , 'UserData')) &&  isempty(get( handles.SerialConnectSensor , 'UserData' ))
     msgbox('请先确保转台与传感器都已连接好！', '自定义旋转角');
@@ -853,10 +960,10 @@ else
                     SetRotateUnit( S_SGSP , 1 );
                 end
                 % 旋转后，记录当前旋转的角度的值包括原始位置值与CycleFlag值，并适当修正
-                [ CurrentRawPos , CycleFlag ] = PosInvTranslation( Rotate_Angle ,Position_Info );
+                New_Pos_Info = PosInvTranslation( Rotate_Angle ,Position_Info );
                 MotorPos = MotorReadPos( S_SGSP );
-                if CurrentRawPos ~= MotorPos;
-                    SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
+                if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+                    SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
                 end
                 
              elseif Rotate_Angle < 0
@@ -864,17 +971,14 @@ else
                 for i=1:1:abs(Rotate_Angle)
                     SetRotateUnit( S_SGSP , -1 );
                 end
-                [ CurrentRawPos , CycleFlag ] = PosInvTranslation( Rotate_Angle ,Position_Info );
+                New_Pos_Info = PosInvTranslation( Rotate_Angle ,Position_Info );
                 MotorPos = MotorReadPos( S_SGSP );
-                if CurrentRawPos ~= MotorPos;
-                    SetRotateSteps( S_SGSP , CurrentRawPos-MotorPos );
+                if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+                    SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
                 end
              end
-             % 旋转完成后将 RawPosition 与 CycleFlags写入Position_Info结构体中
-            Position_Info.Current_CyclePostion = CurrentRawPos;
-            Position_Info.Current_Angle = Rotate_Angle + Position_Info.Current_Angle;
-            Position_Info.CycleFlag = CycleFlag + Position_Info.CycleFlag; 
-            
+             % 旋转完成后将Position_Info结构体更新为New_Pos_Info
+            Position_Info = New_Pos_Info;
             set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
             set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
             set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));
@@ -882,9 +986,15 @@ else
          end
          
      end
+     
+     if S_SGSP.BytesAvailable
+            fread( S_SGSP , S_SGSP.BytesAvailable );%读缓冲区清零
+     end
+     if S_Sensor.BytesAvailable
+            fread( S_Sensor , S_Sensor.BytesAvailable );%读缓冲区清零
+     end
 end
-
-
+guidata(hObject,handles);
 
 function ShowCurrentVoltage_Callback(hObject, eventdata, handles)
 % hObject    handle to ShowCurrentVoltage (see GCBO)
@@ -929,3 +1039,36 @@ function ShowCurrentAngle_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in pushbutton14.
+function pushbutton14_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function PlotAxes_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to PlotAxes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: place code in OpeningFcn to populate PlotAxes
+
+
+% --- Executes on button press in SaveData.
+function SaveData_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% 是否要保存测量的数据---------------------------?
+if ~isempty( get( handles.ShowCurrentVoltage , 'UserData') )
+    button=questdlg('是否要保存数据','确认','是','否','是');
+    if strcmp(button,'是')
+        Voltage_History = get( handles.ShowCurrentVoltage , 'UserData');
+        [ name , path ] = uiputfile();
+        save( [ path ,name ] , 'Voltage_History' );
+    end
+end
+guidata(hObject,handles);

@@ -1,23 +1,17 @@
-function Flag = SetRotateUnit( Serial_Obj , Angle )
-% Flag = SetRotateAngle( Serial_Obj , Angle )
-% Flag : Flag==0 程序顺利执行完成
-% Serial_Obj : 串口对象
-% Angle 电机旋转角度 
+function [ Dat ] = RotateAndRecord( Serial_Obj , Steps , S_Sensor )
+% 将命令发送给转台后，启动计时器进行测量，测量结束后，停止计时器
 
-% 这个函数用来设置转台的旋转角度的大小
-% 对于此平台，电机64微步==平台0.01度
 % Edited by chenguang 2015-05-28 && Email：guang@zchenguang.com
 % -------------------------------------------------------------------------
-
-% 换算角度为电机微步
-Steps_Element = 32;
-Angle_Element = 0.005;
-Steps = Angle/Angle_Element*Steps_Element;
 
 % Constants and varibles might be used 
 Flag = 1; 
 Dev_ACK = hex2dec( 'D' );
 Max_Steps = 32700;
+
+if Serial_Obj.BytesAvailable
+    fread( Serial_Obj , Serial_Obj.BytesAvailable );%读缓冲区清零
+end
 
 % 1> Check the serial status
 if Serial_Obj.Status~='open'
@@ -49,11 +43,33 @@ else
             error( 'MotorSetSteps: Setting motor steps high 8bits failed!' );
         else 
             fwrite( Serial_Obj , Steps_LowBits ,'uint8');
+            % 这里先尝试不用定时器，改使用arduino板子一次性测量大量数据
+            % 发送测量信号
+            if S_Sensor.BytesAvailable
+                fread( S_Sensor , S_Sensor.BytesAvailable );%读缓冲区清零
+            end
+            fwrite( S_Sensor ,4 ); % 启动测量
+           
             if fread( Serial_Obj ,1 ) ~= Dev_ACK
-                error( 'MotorSetSteps: Setting motor steps low 8 bits failed!' );
+                msgbox( 'MotorSetSteps: Setting motor steps low 8 bits failed!' );
             else 
-                Flag = 0;
                 pause( abs(Steps)*0.0004096 );
+                % 这里先尝试不用定时器，改使用arduino板子一次性测量大量数据     
+                % 1> 传感器停止采集数据
+                % 2> PC采集数据传感器传来的信号
+                fwrite( S_Sensor , 3 ); % 终止测量，并发回数据 
+                while ~S_Sensor.BytesAvailable   % 等待数据到达
+                end
+                while S_Sensor.BytesAvailable    % 等到数据到全
+                    tmp = S_Sensor.BytesAvailable;
+                    pause(0.02);
+                    if tmp ~= S_Sensor.BytesAvailable
+                    else
+                        Dat=fread( S_Sensor , S_Sensor.BytesAvailable );
+                        Dat=Dat';
+                    end
+                end
+                
             end
         end 
     end
