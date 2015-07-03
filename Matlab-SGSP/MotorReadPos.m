@@ -18,19 +18,19 @@ if Serial_Obj.Status ~='open'
 end
 
 % Get the positions
-fwrite( Serial_Obj , 1 , 'int8' );
+fwrite( Serial_Obj , 1 , 'uint8' );
 if fread( Serial_Obj , 1 ) ~= Dev_ACK
     error('MotorReadPos:The first time handshaking failed!');
 else
-    fwrite( Serial_Obj , 0 , 'int8' );
+    fwrite( Serial_Obj , 0 , 'uint8' );
     if fread(Serial_Obj , 1 ) ~= Dev_ACK
         error('MotorReadPos:The second time handshaking failed!');
     else
-        fwrite( Serial_Obj , 0 , 'int8' );
+        fwrite( Serial_Obj , 0 , 'uint8' );
         if fread(Serial_Obj , 1 ) ~= Dev_ACK
             error('MotorReadPos:The third time handshaking failed!');
         else
-            fwrite( Serial_Obj , 0 , 'int8' );
+            fwrite( Serial_Obj , 0 , 'uint8' );
             if fread(Serial_Obj , 1 ) ~= Dev_ACK
                 error('MotorReadPos:The fourth time handshaking failed!');
             else

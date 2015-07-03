@@ -843,9 +843,19 @@ Position_Info = get( handles.pushbuttonOriginCheck , 'UserData' );
 S_SGSP = get( handles.SerialConnectSGSP , 'UserData' );
 S_Sensor = get( handles.SerialConnectSensor , 'UserData' );
 
+if S_SGSP.BytesAvailable
+            fread( S_SGSP , S_SGSP.BytesAvailable );%读缓冲区清零
+end
+if S_Sensor.BytesAvailable
+            fread( S_Sensor , S_Sensor.BytesAvailable );%读缓冲区清零
+end
+
 % 获得测量的参数
 Start_Angle = str2num( get( handles.EditMeaStartAngle , 'String') );
 Final_Angle = str2num( get( handles.EditMeaFinalAngle , 'String' ) );
+
+% 
+Roll_Back_Angle = 1 ;
 
 % 是否要保存测量的数据---------------------------?
 if ~isempty( get( handles.ShowCurrentVoltage , 'UserData') )
@@ -856,25 +866,37 @@ if ~isempty( get( handles.ShowCurrentVoltage , 'UserData') )
         save( [ path ,name ] , 'Voltage_History' );
     end
 end
-
-% 正负转动的标志
-if Position_Info.Current_Angle - Start_Angle ~=0
-    Flag = abs(Position_Info.Current_Angle - Start_Angle)/(Position_Info.Current_Angle - Start_Angle);
-    % 回归原位置
-    for i=1:1:( abs( Position_Info.Current_Angle - Start_Angle ) )
-        SetRotateUnit( S_SGSP , -Flag);
-        New_Pos_Info = PosInvTranslation(  -Flag ,Position_Info );
-        MotorPos = MotorReadPos( S_SGSP );
-        if CurrentRawPos ~= MotorPos;
-            SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
-        end
-        % 2> 更新位置信息
-        Position_Info = New_Pos_Info.Current_CyclePostion;
-        set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
-        set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
-        set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));    
-    end
-end
+SetRotateUnit( S_SGSP , -Roll_Back_Angle);
+% 
+% % 正负转动的标志
+% if Position_Info.Current_Angle - Start_Angle ~= 0
+%     if Position_Info.Current_Angle - Start_Angle > 0
+%         % 回归原位置
+%         for i=1:1:(  Position_Info.Current_Angle - Start_Angle  )
+%             SetRotateUnit( S_SGSP , -Roll_Back_Angle);
+%         end
+%         New_Pos_Info = PosInvTranslation(  -Roll_Back_Angle ,Position_Info );
+%         MotorPos = MotorReadPos( S_SGSP );
+%         if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+%             SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
+%         end
+%     elseif Position_Info.Current_Angle - Start_Angle < 0
+%         for i=1:1:(  -Position_Info.Current_Angle + Start_Angle  )
+%             SetRotateUnit( S_SGSP , Roll_Back_Angle);
+%         end
+%         New_Pos_Info = PosInvTranslation(  Roll_Back_Angle ,Position_Info );
+%         MotorPos = MotorReadPos( S_SGSP );
+%         if New_Pos_Info.Current_CyclePostion ~= MotorPos;
+%             SetRotateSteps( S_SGSP , New_Pos_Info.Current_CyclePostion-MotorPos );
+%         end
+%     end
+%     Position_Info = New_Pos_Info;
+%     set( handles.pushbuttonOriginCheck , 'UserData' , Position_Info );
+%     set( handles.ShowCurrentAngle , 'String' , num2str( Position_Info.Current_Angle  ) );
+%     set( handles.ShowCurrentVoltage , 'String' , num2str( ReadVoltage( S_Sensor ) ));  
+% end 
+% 2> 更新位置信息
+  
 guidata( hObject , handles );
 
 % --- Executes on button press in pushbuttonClose.
